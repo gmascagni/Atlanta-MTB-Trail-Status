@@ -195,6 +195,61 @@ body { font-family:'DM Sans',system-ui,sans-serif; background:var(--cream); colo
 .src-link{font-size:11px;color:var(--forest-lt);text-decoration:none}
 .src-link:hover{text-decoration:underline}
 
+/* ─── STAR FAVORITE TOGGLE ───────────────────────────── */
+.star-btn {
+  width:30px; height:30px; border-radius:8px;
+  border:1px solid var(--border); background:var(--white);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:15px; flex-shrink:0;
+  transition:background .15s,border-color .15s,transform .12s;
+  user-select:none; line-height:1;
+}
+.star-btn:hover { border-color:#e8b840; background:#fffbf0; }
+.star-btn:active { transform:scale(.88); }
+.star-btn.starred { background:#fffbf0; border-color:#e8b840; }
+
+/* ─── FAVORITES SECTION ──────────────────────────────── */
+.fav-section {
+  background:var(--white); border-radius:var(--radius);
+  border:1px solid #e8c860; margin-bottom:22px; overflow:hidden;
+  box-shadow:0 2px 10px rgba(232,184,64,.12);
+}
+.fav-hdr {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 16px; border-bottom:1px solid #f0dfa0;
+  background:linear-gradient(to right,#fffbf0,#fff);
+}
+.fav-hdr-title { font-size:14px; font-weight:700; letter-spacing:-.2px; color:#7a5c00; }
+.fav-hdr-sub   { font-size:11px; color:#a07820; margin-left:auto; }
+.fav-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
+.fav-mini {
+  display:flex; align-items:center; gap:10px; padding:10px 14px;
+  border-bottom:1px solid var(--border); border-right:1px solid var(--border);
+  cursor:pointer; transition:background .12s;
+}
+.fav-mini:last-child { border-bottom:none; }
+.fav-mini:hover { background:var(--cream); }
+.fav-mini-icon { font-size:18px; flex-shrink:0; }
+.fav-mini-info { flex:1; min-width:0; }
+.fav-mini-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fav-mini-org  { font-size:10px; color:var(--text-muted); margin-top:1px; }
+.fav-mini-status { display:flex; align-items:center; gap:4px; margin-top:3px; }
+.fav-mini-dot  { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.fav-mini-st   { font-size:10px; font-weight:600; }
+.fav-mini-st.open{color:var(--open)} .fav-mini-st.closed{color:var(--closed)}
+.fav-mini-st.caution{color:var(--caution)} .fav-mini-st.unknown{color:var(--text-muted)}
+.fav-mini-dot.open{background:var(--open)} .fav-mini-dot.closed{background:var(--closed)}
+.fav-mini-dot.caution{background:var(--caution)} .fav-mini-dot.unknown{background:var(--text-muted)}
+.fav-empty { padding:20px 16px; text-align:center; font-size:13px; color:var(--text-muted); }
+
+/* ─── CLOSURE REASON ─────────────────────────────────── */
+.closure-reason {
+  margin:0 12px 10px; padding:8px 12px;
+  background:#fff5f5; border-radius:8px; border-left:3px solid var(--closed);
+}
+.closure-label  { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--closed); margin-bottom:3px; }
+.closure-detail { font-size:12px; color:#7a2020; line-height:1.5; }
+
 /* ─── SKELETON ───────────────────────────────────────── */
 .skeleton{background:linear-gradient(90deg,#ede9e1 25%,#e4dfd6 50%,#ede9e1 75%);background-size:200% 100%;animation:shimmer 1.6s infinite;border-radius:6px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -265,10 +320,11 @@ body { font-family:'DM Sans',system-ui,sans-serif; background:var(--cream); colo
     <div class="filter-wrap">
       <div class="sb-label">Filter</div>
       <div class="filter-row">
-        <button class="flt-btn active" data-f="all"     onclick="setFilter('all',this)">All</button>
-        <button class="flt-btn"        data-f="open"    onclick="setFilter('open',this)">Open</button>
-        <button class="flt-btn"        data-f="closed"  onclick="setFilter('closed',this)">Closed</button>
-        <button class="flt-btn"        data-f="caution" onclick="setFilter('caution',this)">Caution</button>
+        <button class="flt-btn active" data-f="all"      onclick="setFilter('all',this)">All</button>
+        <button class="flt-btn"        data-f="open"     onclick="setFilter('open',this)">Open</button>
+        <button class="flt-btn"        data-f="closed"   onclick="setFilter('closed',this)">Closed</button>
+        <button class="flt-btn"        data-f="caution"  onclick="setFilter('caution',this)">Caution</button>
+        <button class="flt-btn"        data-f="favorites" onclick="setFilter('favorites',this)">⭐ Favorites</button>
       </div>
     </div>
     <div class="trail-nav" id="trail-nav">
@@ -278,17 +334,19 @@ body { font-family:'DM Sans',system-ui,sans-serif; background:var(--cream); colo
 
   <!-- MOBILE FILTER BAR -->
   <div class="mob-filter" id="mob-filter">
-    <button class="flt-btn active" data-f="all"     onclick="setFilter('all',this)">All</button>
-    <button class="flt-btn"        data-f="open"    onclick="setFilter('open',this)">Open</button>
-    <button class="flt-btn"        data-f="closed"  onclick="setFilter('closed',this)">Closed</button>
-    <button class="flt-btn"        data-f="caution" onclick="setFilter('caution',this)">Caution</button>
+    <button class="flt-btn active" data-f="all"       onclick="setFilter('all',this)">All</button>
+    <button class="flt-btn"        data-f="open"      onclick="setFilter('open',this)">Open</button>
+    <button class="flt-btn"        data-f="closed"    onclick="setFilter('closed',this)">Closed</button>
+    <button class="flt-btn"        data-f="caution"   onclick="setFilter('caution',this)">Caution</button>
+    <button class="flt-btn"        data-f="favorites" onclick="setFilter('favorites',this)">⭐ Favorites</button>
   </div>
 
   <!-- MAIN -->
   <main class="main">
     <div class="note">
-      ℹ️ Status fetched live from <strong>SORBA Woodstock</strong>, <strong>RAMBO</strong>, and <strong>MTB Atlanta</strong> (32+ parks). Weather via Open-Meteo. Tap <strong>Maps</strong> to open Google Maps navigation.
+      ℹ️ Status fetched live from <strong>SORBA Woodstock</strong>, <strong>RAMBO</strong>, and <strong>MTB Atlanta</strong> (32+ parks). Weather via Open-Meteo. Tap <strong>☆</strong> on any card to favorite a trail. Tap <strong>Maps</strong> to open Google Maps navigation.
     </div>
+    <div id="fav-panel" style="display:none"></div>
     <div id="content"></div>
   </main>
 
@@ -299,7 +357,7 @@ body { font-family:'DM Sans',system-ui,sans-serif; background:var(--cream); colo
   <a href="https://www.rambo-mtb.org/home-3" target="_blank">RAMBO MTB</a> ·
   <a href="https://mtbatlanta.com/trail-status/" target="_blank">MTB Atlanta</a> ·
   Weather: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a><br>
-  Created by Geo an other FIDY Project 🚵‍♂️
+  Always verify trail status before you ride 🚵‍♂️
 </footer>
 
 </div>
@@ -465,15 +523,22 @@ async function loadWeather() {
 function rideCondition(wx) {
   if (!wx) return null;
   const code = wx.weather_code ?? 0;
-  const pr   = wx.precipitation ?? 0;
-  const pp   = wx.precip_probability ?? 0;
+  const pr   = wx.precipitation ?? 0;   // inches fallen this hour
+  const pp   = wx.precip_probability ?? 0; // % chance this hour
   const temp = wx.temperature_2m ?? 55;
-  if ([61,63,65,80,81,82,95,96,99].includes(code) || pr > 0.05 || pp > 60)
-    return {label:"⚠️ Wet — verify before riding", cls:"rc-wet"};
-  if ([51,53,55].includes(code) || pr > 0 || pp > 30)
-    return {label:"🟡 Light precip — may be muddy", cls:"rc-caution"};
+
+  // Actively raining/storming, measurable precip, or very high rain probability
+  if ([61,63,65,80,81,82,95,96,99].includes(code) || pr >= 0.02 || pp >= 70)
+    return {label:"⚠️ Wet conditions — verify before riding", cls:"rc-wet"};
+
+  // Drizzle codes, trace precip, or moderate-high rain chance
+  if ([51,53,55].includes(code) || (pr > 0 && pr < 0.02) || pp >= 50)
+    return {label:"🟡 Possible light precip — may be muddy", cls:"rc-caution"};
+
+  // Freezing temps
   if (temp < 32)
-    return {label:"🧊 Freezing temps — possible ice", cls:"rc-caution"};
+    return {label:"🧊 Freezing temps — possible ice on trails", cls:"rc-caution"};
+
   return {label:"✅ Good conditions for riding", cls:"rc-ideal"};
 }
 
@@ -521,8 +586,8 @@ async function fetchStatus() {
 2. https://www.rambo-mtb.org/home-3
 3. https://mtbatlanta.com/trail-status/
 
-Return this exact JSON shape (status = "open"|"closed"|"caution"|"unknown"):
-{"sorba_updated":"","blankets_creek":{"status":"open","note":""},"olde_rope_mill":{"status":"open","note":""},"rambo_updated":"","big_creek":{"status":"open","subTrails":{"Cross Country":"open","Freeride":"open","Pump Tracks":"open","Skills Kitchen":"open"}},"charleston_park":{"status":"open"},"haw_creek":{"status":"open"},"matt_park":{"status":"open"},"mt_adams":{"status":"open"},"mtbatl_updated":"","allatoona_creek":{"status":"open"},"pitner_road":{"status":"open"},"lost_mountain":{"status":"open"},"mt_tabor":{"status":"open"},"pumpkinvine":{"status":"open"},"clinton_nature":{"status":"open"},"castle_playground":{"status":"open"},"wilderness_camp":{"status":"open"},"sara_babb":{"status":"open"},"cannongate":{"status":"open"},"sope_creek":{"status":"open","note":"Text Ride to 770-727-5061"},"north_cooper_lake":{"status":"open"},"southside_park":{"status":"open"},"sykes_park":{"status":"open"},"campbellton_creek":{"status":"open"},"aerotropolis":{"status":"open"},"yellow_river":{"status":"open","note":"Call 770-978-5270"},"harbins_park":{"status":"open","note":"Call 770-978-5270"},"tribble_mill":{"status":"open","note":"Call 770-978-5270"},"south_rockdale":{"status":"open"},"browns_mill":{"status":"open"},"cochran_mill":{"status":"open"},"chattahoochee_bend":{"status":"open"},"moores_bridge":{"status":"open"},"newnan_linc":{"status":"open"},"dogwood_church":{"status":"open"},"quarrys_edge":{"status":"open"},"pyne_road":{"status":"open"},"lakeside_trails":{"status":"open"},"talking_rock":{"status":"unknown"},"fightingtown_creek":{"status":"unknown"},"doris_wiggington":{"status":"unknown"}}`}]
+Return this exact JSON shape (status = "open"|"closed"|"caution"|"unknown", closure_reason = specific event/race/maintenance text only — leave blank if just wet/rain/unknown):
+{"sorba_updated":"","blankets_creek":{"status":"open","closure_reason":""},"olde_rope_mill":{"status":"open","closure_reason":""},"rambo_updated":"","big_creek":{"status":"open","closure_reason":"","subTrails":{"Cross Country":"open","Freeride":"open","Pump Tracks":"open","Skills Kitchen":"open"}},"charleston_park":{"status":"open","closure_reason":""},"haw_creek":{"status":"open","closure_reason":""},"matt_park":{"status":"open","closure_reason":""},"mt_adams":{"status":"open","closure_reason":""},"mtbatl_updated":"","allatoona_creek":{"status":"open","closure_reason":""},"pitner_road":{"status":"open","closure_reason":""},"lost_mountain":{"status":"open","closure_reason":""},"mt_tabor":{"status":"open","closure_reason":""},"pumpkinvine":{"status":"open","closure_reason":""},"clinton_nature":{"status":"open","closure_reason":""},"castle_playground":{"status":"open","closure_reason":""},"wilderness_camp":{"status":"open","closure_reason":""},"sara_babb":{"status":"open","closure_reason":""},"cannongate":{"status":"open","closure_reason":""},"sope_creek":{"status":"open","closure_reason":"","note":"Text Ride to 770-727-5061"},"north_cooper_lake":{"status":"open","closure_reason":""},"southside_park":{"status":"open","closure_reason":""},"sykes_park":{"status":"open","closure_reason":""},"campbellton_creek":{"status":"open","closure_reason":""},"aerotropolis":{"status":"open","closure_reason":""},"yellow_river":{"status":"open","closure_reason":"","note":"Call 770-978-5270"},"harbins_park":{"status":"open","closure_reason":"","note":"Call 770-978-5270"},"tribble_mill":{"status":"open","closure_reason":"","note":"Call 770-978-5270"},"south_rockdale":{"status":"open","closure_reason":""},"browns_mill":{"status":"open","closure_reason":""},"cochran_mill":{"status":"open","closure_reason":""},"chattahoochee_bend":{"status":"open","closure_reason":""},"moores_bridge":{"status":"open","closure_reason":""},"newnan_linc":{"status":"open","closure_reason":""},"dogwood_church":{"status":"open","closure_reason":""},"quarrys_edge":{"status":"open","closure_reason":""},"pyne_road":{"status":"open","closure_reason":""},"lakeside_trails":{"status":"open","closure_reason":""},"talking_rock":{"status":"unknown","closure_reason":""},"fightingtown_creek":{"status":"unknown","closure_reason":""},"doris_wiggington":{"status":"unknown","closure_reason":""}}`}]
       })
     });
     const d = await r.json();
@@ -539,6 +604,92 @@ Return this exact JSON shape (status = "open"|"closed"|"caution"|"unknown"):
 function getStatus(id) {
   const key = ID2KEY[id];
   return (key && statusData[key]) ? statusData[key] : {status:"unknown"};
+}
+
+/* ══════════════════════════════════════════════════════
+   FAVORITES  (localStorage-backed)
+══════════════════════════════════════════════════════ */
+let favorites = new Set();
+
+function loadFavorites() {
+  try {
+    const raw = localStorage.getItem("atl_trail_favorites");
+    if (raw) favorites = new Set(JSON.parse(raw));
+  } catch(e) { favorites = new Set(); }
+}
+
+function saveFavorites() {
+  try { localStorage.setItem("atl_trail_favorites", JSON.stringify([...favorites])); }
+  catch(e) {}
+}
+
+function toggleFavorite(id) {
+  if (favorites.has(id)) favorites.delete(id);
+  else favorites.add(id);
+  saveFavorites();
+  // Update just the star button + sidebar — no full re-render
+  const btn = document.getElementById("star-"+id);
+  if (btn) {
+    btn.classList.toggle("starred", favorites.has(id));
+    btn.title = favorites.has(id) ? "Remove from favorites" : "Add to favorites";
+    btn.textContent = favorites.has(id) ? "⭐" : "☆";
+  }
+  // Re-render the favorites panel only
+  renderFavoritesPanel();
+  // Rebuild sidebar so the fav group updates
+  buildSidebar();
+}
+
+/* Lookup a trail object by id across all orgs */
+function findTrail(id) {
+  for (const org of ORGS) {
+    const t = org.trails.find(t => t.id === id);
+    if (t) return { trail: t, org };
+  }
+  return null;
+}
+
+function renderFavoritesPanel() {
+  const container = document.getElementById("fav-panel");
+  if (!container) return;
+
+  const favIds = [...favorites];
+  if (favIds.length === 0) {
+    container.style.display = "none";
+    return;
+  }
+  container.style.display = "block";
+
+  const items = favIds.map(id => {
+    const found = findTrail(id);
+    if (!found) return "";
+    const { trail, org } = found;
+    const si     = getStatus(id);
+    const status = si.status || "unknown";
+    return `<div class="fav-mini" onclick="scrollToCard('${id}')">
+      <div class="fav-mini-icon">${trail.icon}</div>
+      <div class="fav-mini-info">
+        <div class="fav-mini-name">${trail.name}</div>
+        <div class="fav-mini-org">${org.name}</div>
+        <div class="fav-mini-status">
+          <div class="fav-mini-dot ${status}"></div>
+          <span class="fav-mini-st ${status}">${SL[status]||"Unknown"}</span>
+        </div>
+      </div>
+      <button class="star-btn starred" id="fav-panel-star-${id}"
+        onclick="event.stopPropagation();toggleFavorite('${id}')"
+        title="Remove from favorites">⭐</button>
+    </div>`;
+  }).join("");
+
+  container.innerHTML = `<div class="fav-section">
+    <div class="fav-hdr">
+      <span style="font-size:18px">⭐</span>
+      <span class="fav-hdr-title">My Favorite Trails</span>
+      <span class="fav-hdr-sub">${favIds.length} saved · tap ☆ on any card to add</span>
+    </div>
+    <div class="fav-grid">${items}</div>
+  </div>`;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -577,6 +728,21 @@ function renderWx(trail, wx) {
   </div>`;
 }
 
+function renderClosureReason(si) {
+  // Only show a specific event/race/maintenance reason — not generic wet/weather messages
+  const reason = (si.closure_reason || "").trim();
+  if (!reason) return "";
+  const lower = reason.toLowerCase();
+  // Skip if the only content is weather-related with no specific event
+  const isWeatherOnly = ["wet","rain","mud","moisture","24 hour","24hr","precipitation","soft"].some(w => lower.includes(w))
+    && !["race","event","maintenance","construction","repair","work","volunteer","hunt","season","festival","ride","competition"].some(w => lower.includes(w));
+  if (isWeatherOnly) return "";
+  return `<div class="closure-reason">
+    <div class="closure-label">Closure reason</div>
+    <div class="closure-detail">${reason}</div>
+  </div>`;
+}
+
 function renderCard(trail, orgName) {
   const si     = getStatus(trail.id);
   const status = si.status || "unknown";
@@ -584,12 +750,15 @@ function renderCard(trail, orgName) {
   const note   = si.note || trail.note || "";
   const upd    = si.updated || "";
   const sub    = si.subTrails;
+  const isFav  = favorites.has(trail.id);
 
   const subH = (trail.subTrails && sub)
     ? `<div class="sub-trails">${trail.subTrails.map(st=>{
         const ss=sub[st]||"unknown";
         return `<div class="sub-pill"><div class="sub-dot ${ss}"></div>${st}</div>`;
       }).join("")}</div>` : "";
+
+  const closureH = (status === "closed" || status === "caution") ? renderClosureReason(si) : "";
 
   return `<div class="tcard" id="card-${trail.id}" data-status="${status}">
     <div class="card-top">
@@ -598,11 +767,17 @@ function renderCard(trail, orgName) {
         <div class="card-name">${trail.name}</div>
         <div class="card-org">${orgName}</div>
       </div>
-      <div class="spill ${status}"><div class="spill-dot"></div>${SL[status]||"Unknown"}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div class="spill ${status}"><div class="spill-dot"></div>${SL[status]||"Unknown"}</div>
+        <button class="star-btn ${isFav?'starred':''}" id="star-${trail.id}"
+          onclick="toggleFavorite('${trail.id}')"
+          title="${isFav?'Remove from favorites':'Add to favorites'}">${isFav?'⭐':'☆'}</button>
+      </div>
     </div>
     ${subH}
     ${note?`<div class="card-note">${note}</div>`:""}
     ${upd?`<div class="card-note">Updated: ${upd}</div>`:""}
+    ${closureH}
     ${renderWx(trail, wx)}
     <div class="card-foot">
       <div class="addr">📍 ${trail.address}</div>
@@ -631,12 +806,28 @@ function skeletonCards(n) {
 function buildSidebar() {
   const nav = document.getElementById("trail-nav");
   if (!nav) return;
-  nav.innerHTML = ORGS.map(org=>`
+  const favIds = [...favorites];
+  const favGroup = favIds.length > 0 ? `
+    <div>
+      <div class="nav-group-hdr">⭐ Favorites (${favIds.length})</div>
+      ${favIds.map(id=>{
+        const found = findTrail(id);
+        if (!found) return "";
+        const { trail } = found;
+        const s = getStatus(id).status||"unknown";
+        return `<div class="nav-item" id="nav-fav-${id}" onclick="scrollToCard('${id}')">
+          <div class="nav-dot" style="background:${DC[s]||'var(--text-muted)'}"></div>
+          <span>${trail.name}</span>
+        </div>`;
+      }).join("")}
+    </div>` : "";
+
+  nav.innerHTML = favGroup + ORGS.map(org=>`
     <div>
       <div class="nav-group-hdr">${org.name}</div>
       ${org.trails.map(t=>{
         const s = getStatus(t.id).status||"unknown";
-        return `<div class="nav-item" id="nav-${t.id}" onclick="scrollTo('${t.id}')">
+        return `<div class="nav-item" id="nav-${t.id}" onclick="scrollToCard('${t.id}')">
           <div class="nav-dot" style="background:${DC[s]||'var(--text-muted)'}"></div>
           <span>${t.name}</span>
         </div>`;
@@ -656,16 +847,20 @@ function renderAll() {
   document.getElementById("sum-closed").textContent = closed;
   document.getElementById("sum-total").textContent  = total;
 
+  renderFavoritesPanel();
+
   const content = document.getElementById("content");
   content.innerHTML = ORGS.map(org=>{
     const upd      = statusData[org.updKey] || "";
     const openC    = org.trails.filter(t=>(getStatus(t.id).status||"unknown")==="open").length;
     const closedC  = org.trails.filter(t=>(getStatus(t.id).status||"unknown")==="closed").length;
     const filtered = org.trails.filter(t=>{
-      if (curFilter==="all") return true;
-      return (getStatus(t.id).status||"unknown")===curFilter;
+      const s = getStatus(t.id).status||"unknown";
+      if (curFilter === "favorites") return favorites.has(t.id);
+      if (curFilter === "all") return true;
+      return s === curFilter;
     });
-    if (!filtered.length && curFilter!=="all") return "";
+    if (!filtered.length) return "";
     return `<div class="org-sec" id="org-${org.id}">
       <div class="org-hdr">
         <div class="org-icon">${org.icon}</div>
@@ -680,25 +875,35 @@ function renderAll() {
         </div>
       </div>
       <div class="grid">
-        ${filtered.length ? filtered.map(t=>renderCard(t,org.name)).join("") : '<div style="color:var(--text-muted);font-size:13px;padding:4px 0;">No trails match this filter.</div>'}
+        ${filtered.map(t=>renderCard(t,org.name)).join("")}
       </div>
     </div>`;
-  }).join("");
+  }).join("") || `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:14px">
+      ${curFilter==="favorites" ? "No favorites yet — tap ☆ on any trail card to save it here." : "No trails match this filter."}
+    </div>`;
 
   buildSidebar();
 }
 
-function scrollTo(id) {
-  const el = document.getElementById("card-"+id);
-  if (el) {
-    el.scrollIntoView({behavior:"smooth",block:"start"});
-    el.style.outline = "3px solid var(--forest)";
-    el.style.outlineOffset = "2px";
-    setTimeout(()=>{el.style.outline="";el.style.outlineOffset="";},1800);
+function scrollToCard(id) {
+  // If favorites filter is active, switch back to all first
+  if (curFilter === "favorites") {
+    curFilter = "all";
+    document.querySelectorAll(".flt-btn").forEach(b=>b.classList.toggle("active",b.dataset.f==="all"));
+    renderAll();
   }
-  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-  const nav=document.getElementById("nav-"+id);
-  if(nav){nav.classList.add("active");nav.scrollIntoView({block:"nearest"});}
+  setTimeout(() => {
+    const el = document.getElementById("card-"+id);
+    if (el) {
+      el.scrollIntoView({behavior:"smooth",block:"start"});
+      el.style.outline = "3px solid var(--forest)";
+      el.style.outlineOffset = "2px";
+      setTimeout(()=>{el.style.outline="";el.style.outlineOffset="";},1800);
+    }
+    document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+    const nav=document.getElementById("nav-"+id);
+    if(nav){nav.classList.add("active");nav.scrollIntoView({block:"nearest"});}
+  }, curFilter==="favorites" ? 80 : 0);
 }
 
 function setFilter(f, btn) {
@@ -736,8 +941,8 @@ async function loadAll() {
   btn.disabled=false; icon.classList.remove("spin");
 }
 
+loadFavorites();
 loadAll();
-
 </script>
 </body>
 </html>
