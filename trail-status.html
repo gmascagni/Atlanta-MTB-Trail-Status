@@ -727,72 +727,62 @@ const SL = {open:"Open",closed:"Closed",caution:"Caution",unknown:"Unknown"};
 const DC = {open:"var(--open)",closed:"var(--closed)",caution:"var(--caution)",unknown:"var(--text-muted)"};
 
 function rideabilityScore(wx, trailStatus) {
-  // Start at 100 and subtract based on weather signals + site staleness factor
-  if (!wx) return null;
-
-  const code = wx.weather_code ?? 0;
-  const pr   = wx.precipitation ?? 0;   // inches this hour
-  const pp   = wx.precip_probability ?? 0; // % chance this hour
-  const temp = wx.temperature_2m ?? 55;
-  const hum  = wx.relative_humidity_2m ?? 50;
+  // Score works with OR without weather data
   const status = trailStatus?.status || "unknown";
-
   let score = 100;
   let reasons = [];
+  let noWeather = !wx;
 
-  // ── Weather deductions ─────────────────────────────
-  // Active rain / storms
-  if ([95,96,99].includes(code))        { score -= 55; reasons.push("thunderstorm"); }
-  else if ([65,82].includes(code))      { score -= 45; reasons.push("heavy rain"); }
-  else if ([63,80,81].includes(code))   { score -= 35; reasons.push("rain"); }
-  else if ([61].includes(code))         { score -= 25; reasons.push("light rain"); }
-  else if ([51,53,55].includes(code))   { score -= 18; reasons.push("drizzle"); }
+  if (wx) {
+    const code = wx.weather_code ?? 0;
+    const pr   = wx.precipitation ?? 0;
+    const pp   = wx.precip_probability ?? 0;
+    const temp = wx.temperature_2m ?? 55;
+    const hum  = wx.relative_humidity_2m ?? 50;
 
-  // Measurable precip falling right now
-  if (pr >= 0.1)       { score -= 25; reasons.push("heavy precip falling"); }
-  else if (pr >= 0.02) { score -= 15; reasons.push("precip falling"); }
-  else if (pr > 0)     { score -= 8;  reasons.push("trace precip"); }
+    // Active rain / storms
+    if ([95,96,99].includes(code))      { score -= 55; reasons.push("thunderstorm"); }
+    else if ([65,82].includes(code))    { score -= 45; reasons.push("heavy rain"); }
+    else if ([63,80,81].includes(code)) { score -= 35; reasons.push("rain"); }
+    else if ([61].includes(code))       { score -= 25; reasons.push("light rain"); }
+    else if ([51,53,55].includes(code)) { score -= 18; reasons.push("drizzle"); }
 
-  // Rain probability ahead
-  if (pp >= 80)        { score -= 20; reasons.push("very high rain chance"); }
-  else if (pp >= 70)   { score -= 14; reasons.push("high rain chance"); }
-  else if (pp >= 50)   { score -= 8;  reasons.push("moderate rain chance"); }
+    // Measurable precip falling now
+    if (pr >= 0.1)        { score -= 25; reasons.push("heavy precip falling"); }
+    else if (pr >= 0.02)  { score -= 15; reasons.push("precip falling"); }
+    else if (pr > 0)      { score -= 8;  reasons.push("trace precip"); }
 
-  // Humidity (saturated soil = slower drainage)
-  if (hum >= 90)       { score -= 8;  }
-  else if (hum >= 80)  { score -= 4;  }
+    // Rain probability
+    if (pp >= 80)         { score -= 20; reasons.push("80%+ rain chance"); }
+    else if (pp >= 70)    { score -= 14; reasons.push("70%+ rain chance"); }
+    else if (pp >= 50)    { score -= 8;  reasons.push("50%+ rain chance"); }
 
-  // Freezing
-  if (temp < 28)       { score -= 20; reasons.push("hard freeze"); }
-  else if (temp < 32)  { score -= 12; reasons.push("freezing temps"); }
+    // Humidity
+    if (hum >= 90)        { score -= 8; }
+    else if (hum >= 80)   { score -= 4; }
 
-  // ── Trail status deductions ─────────────────────────
-  // Websites aren't always updated in real time — factor that in
-  if (status === "closed")  {
-    score -= 30; // closed + bad weather is very likely actually closed
-    reasons.push("site reports closed");
-  } else if (status === "caution") {
-    score -= 15;
-    reasons.push("site reports caution");
-  } else if (status === "unknown") {
-    score -= 5; // slight penalty for no data
+    // Freezing
+    if (temp < 28)        { score -= 20; reasons.push("hard freeze"); }
+    else if (temp < 32)   { score -= 12; reasons.push("freezing temps"); }
+  } else {
+    // No weather data — small penalty for uncertainty
+    score -= 5;
+    reasons.push("weather data unavailable");
   }
-  // "open" = no deduction BUT weather can still make it unrideable
 
-  // ── Clamp ──────────────────────────────────────────
+  // Trail site status — sites are not always updated in real time
+  if (status === "closed")        { score -= 30; reasons.push("site reports closed"); }
+  else if (status === "caution")  { score -= 15; reasons.push("site reports caution"); }
+  else if (status === "unknown")  { score -= 5; }
+
   score = Math.max(0, Math.min(100, Math.round(score)));
 
-  // ── Tier ───────────────────────────────────────────
   let tier, fillCls, pctCls, emoji;
-  if (score >= 70) {
-    tier = "Likely Rideable";  fillCls = "prob-fill-high"; pctCls = "high"; emoji = "🟢";
-  } else if (score >= 40) {
-    tier = "Questionable";     fillCls = "prob-fill-med";  pctCls = "med";  emoji = "🟡";
-  } else {
-    tier = "Likely Closed / Unrideable"; fillCls = "prob-fill-low"; pctCls = "low"; emoji = "🔴";
-  }
+  if (score >= 70)      { tier = "Likely Rideable";            fillCls = "prob-fill-high"; pctCls = "high"; emoji = "🟢"; }
+  else if (score >= 40) { tier = "Questionable";               fillCls = "prob-fill-med";  pctCls = "med";  emoji = "🟡"; }
+  else                  { tier = "Likely Closed / Unrideable"; fillCls = "prob-fill-low";  pctCls = "low";  emoji = "🔴"; }
 
-  return { score, tier, fillCls, pctCls, emoji, reasons };
+  return { score, tier, fillCls, pctCls, emoji, reasons, noWeather };
 }
 
 function renderWx(trail, wx) {
@@ -829,9 +819,11 @@ function renderWx(trail, wx) {
 function renderProbScore(wx, si) {
   const prob = rideabilityScore(wx, si);
   if (!prob) return "";
+  const factorStr = prob.reasons.filter(r => r !== "weather data unavailable").join(", ");
+  const wxNote = prob.noWeather ? " Weather data unavailable." : "";
   const noteText = prob.score < 70
-    ? `Factors: ${prob.reasons.join(", ")}${prob.reasons.length ? ". " : ""}Trail sites are not always updated in real time.`
-    : "Trail sites may lag real conditions — always verify before heading out.";
+    ? `${factorStr ? "Factors: " + factorStr + "." : ""}${wxNote} Trail sites aren't always updated — verify before riding.`
+    : `${wxNote || ""}${wxNote ? " " : ""}Trail sites may lag real conditions — always verify before heading out.`.trim();
   return `<div class="prob-wrap">
     <div class="prob-header">
       <div class="prob-label">🤖 AI Rideable Probability</div>
